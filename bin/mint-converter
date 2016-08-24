@@ -1,0 +1,52 @@
+#!/usr/bin/env ruby
+
+require File.expand_path("../../lib/mint_converter", __FILE__)
+require 'optparse'
+require 'logger'
+
+class MintConverterCli
+  ME = File.basename($0)
+
+  def initialize
+    @logger = Logger.new(STDOUT)
+    @logger.level = Logger::INFO
+    @logger.datetime_format = '%Y-%m-%d %H:%M:%S '
+    @opts = {}
+  end
+
+  def parse
+    OptionParser.new do |opts|
+      opts.banner = "Usage: #{ME} /path/to/mint_transactions_export.csv"
+      opts.separator ''
+      opts.separator "Other options:"
+      opts.on('-h', '--help', 'Display this help text and exit') do
+        puts opts, "\n"
+        exit 0
+      end
+      opts.on('-v', '--verbose', 'Sets debug-level verbosity') do
+        @logger.level = Logger::DEBUG
+      end
+      #opts.on('-q', '--quiet', 'Supress all output') do
+        #@logger.level = Logger::ERROR
+      #end
+      opts.parse!(ARGV)
+    end
+
+    if ARGV.empty?
+      puts "You must supply a csv file."
+      puts "Run #{ME} --help for assistance."
+      exit 1
+    end
+
+    @filename = ARGV.shift
+  end
+
+  def run
+    m = MintConverter.new(@filename, @logger, @opts)
+    puts m.convert_credits_to_negative
+  end
+end
+
+cli = MintConverterCli.new
+cli.parse
+cli.run
